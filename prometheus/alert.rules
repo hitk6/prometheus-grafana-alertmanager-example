@@ -28,3 +28,13 @@ groups:
     annotations:
       summary: "Site Down: {{$labels.instance}}"
       description: "Site Down: {{$labels.instance}} for more than 30 seconds"
+
+
+  - alert: LambdaHighInvocations
+    expr: aws_lambda_invocations_sum > 5
+    for: 1m
+    labels:
+      severity: P0
+    annotations:
+      summary: "High Invocations on Lambda function: {{$labels.function_name}}"
+      description: "High Invocations on Lambda function: {{$labels.function_name}}"

@@ -3,11 +3,12 @@ version: '3.1'
 volumes:
     prometheus_data: {}
     grafana_data: {}
+    config_files: {}
 
 services:
 
   prometheus:
-    image: prom/prometheus:v2.0.0
+    image: prom/prometheus:v2.45.0
     volumes:
       - ./prometheus/:/etc/prometheus/
       - prometheus_data:/prometheus
@@ -46,20 +47,20 @@ services:
       mode: global
 
   alertmanager:
-    image: prom/alertmanager:v0.12.0
+    image: prom/alertmanager:v0.25.0
     ports:
       - 9093:9093
     volumes:
       - ./alertmanager/:/etc/alertmanager/
     restart: always
     command:
-      - '-config.file=/etc/alertmanager/config.yml'
-      - '-storage.path=/alertmanager'
+      - '--config.file=/etc/alertmanager/config.yml'
+      - '--storage.path=/alertmanager'
     deploy:
       mode: global
 
   cadvisor:
-    image: google/cadvisor
+    image: gcr.io/cadvisor/cadvisor:v0.46.0
     volumes:
       - /:/rootfs:ro
       - /var/run:/var/run:rw
@@ -72,7 +73,7 @@ services:
       mode: global
 
   grafana:
-    image: grafana/grafana:5.4.2
+    image: grafana/grafana:9.5.6
     depends_on:
       - prometheus
     ports:
@@ -93,3 +94,22 @@ services:
     command:
       - '--config.file=/etc/blackboxexporter/config.yml'
     restart: always
+
+
+  cloudwatch-exporter:
+     image: prom/cloudwatch-exporter:v0.15.4
+     container_name: cloudwatch-exporter
+     volumes:
+     - config_files:/configuration
+     - ./cloudwatch-exporter/config:/config
+     - ./cloudwatch-exporter/credentials:/.aws/credentials
+     ports:
+     - 9106:9106
+     environment:
+     - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-}
+     - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-}
+     - AWS_CREDENTIAL_PROFILES_FILE=/.aws/credentials
+     - AWS_PROFILE=${AWS_PROFILE:-default}
+       #     - AWS_REGION="us-west-2"
+    #  command:
+    #  - "/configuration/cloudwatch.yml"
