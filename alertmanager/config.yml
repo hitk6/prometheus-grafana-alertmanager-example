@@ -1,7 +1,64 @@
+global:
+  resolve_timeout: 5m
 route:
-    receiver: 'pager'
-
+  receiver: warning
+  group_by:
+  - severity
+  - alertname
+  routes:
+  - receiver: whitehole
+    match_re:
+      severity: ^(success|info)$
+    continue: true
+  - receiver: critical
+    match_re:
+      severity: ^(critical|error)$
+    continue: true
+  - receiver: warning
+    match_re:
+      severity: ^(warning)$
+    continue: true
+  - receiver: high
+    match_re:
+      severity: ^(high)$
+    continue: true
+  group_wait: 5m
+  group_interval: 1m
+  repeat_interval: 1h
+inhibit_rules:
+- target_match:
+    severity: warning
+  source_match:
+    severity: critical
+  equal:
+  - alertname
+- target_match:
+    alertname: KubeClientCertificateExpiration
+  source_match:
+    alertname: KubeClientCertificateExpiration
+  equal:
+  - prometheus
 receivers:
-    - name: 'pager'
-      webhook_configs:
-      - url: https://ngrok.io # replace with your PagerTree webhook url
+- name: whitehole
+- name: critical
+  slack_configs:
+  - send_resolved: true
+    api_url: https://hooks.slack.com/services/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
+    channel: poc
+    color: '{{ if eq .Status "firing" }}warning{{ else }}good{{ end }}'
+    title: '[{{ if eq .Status "firing" }}{{ .Alerts.Firing | len }} {{ end }} {{ if
+      eq .Status "firing" }}Alerts{{ else }}{{ .Status | toUpper }}{{ end }}]'
+    title_link: https://34.232.137.54:9090/alerts
+    pretext: '{{ .CommonAnnotations.summary }}'
+    text: |-
+      {{ range .Alerts }}
+      {{- if .Annotations.summary }}*Alert:* {{ .Annotations.summary }}{{- end }}
+      *Description:* {{ .Annotations.description }}{{ .Annotations.message }}
+      *Severity:* `{{ .Labels.severity }}`
+      {{ end }}
+    fallback: '{{ template "slack.default.fallback" . }}'
+    icon_emoji: '{{ template "slack.default.iconemoji" . }}'
+    icon_url: '{{ template "slack.default.iconurl" . }}'
+- name: high
+- name: warning
+templates: []

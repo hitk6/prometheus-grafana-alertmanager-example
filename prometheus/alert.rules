@@ -6,16 +6,16 @@ groups:
     expr: up == 0
     for: 30s
     labels:
-      severity: page
+      severity: critical
     annotations:
       summary: "Instance {{ $labels.instance }} down"
       description: "{{ $labels.instance }} of job {{ $labels.job }} has been down for more than 30 seconds."
 
   - alert: high_load
-    expr: node_load1 > 0.8
+    expr: node_load1 > 0
     for: 30s
     labels:
-      severity: page
+      severity: critical
     annotations:
       summary: "Instance {{ $labels.instance }} under high load"
       description: "{{ $labels.instance }} of job {{ $labels.job }} is under high load."
@@ -24,17 +24,63 @@ groups:
     expr: probe_success < 1
     for: 30s
     labels:
-      severity: page
+      severity: critial
     annotations:
       summary: "Site Down: {{$labels.instance}}"
       description: "Site Down: {{$labels.instance}} for more than 30 seconds"
 
 
+- name: AWS-Lambda
+  rules:
+  - alert: HighFunctionErrorRate
+    expr: (aws_lambda_errors_sum / aws_lambda_invocations_sum) > 0.15
+    for: 10m
+    labels:
+      severity: critical
+    annotations:
+      summary: High error rate on function {{$labels.dimension_FunctionName}}
+  - alert: ThrottlingFunction
+    expr: aws_lambda_throttles_sum  > 0
+    for: 10m
+    labels:
+      severity: warning
+    annotations:
+      summary: Detected throttling in function {{$labels.dimension_FunctionName}}
+  - alert: DestinationDeliveryFailures
+    expr: aws_lambda_destination_delivery_failures_sum > 0
+    for: 10m
+    labels:
+      severity: critical
+    annotations:
+      summary: Detected destination delivery failures in function {{$labels.dimension_FunctionName}}
+  - alert: DeadLetterErrors
+    expr: aws_lambda_dead_letter_errors_sum  > 0
+    for: 10m
+    labels:
+      severity: warning
+    annotations:
+      summary: Detected dead-letter queue errors in function {{$labels.dimension_FunctionName}}
+  - alert: HighIteratorAge
+    expr: aws_lambda_iterator_age_average  > 1000
+    for: 10m
+    labels:
+      severity: critical
+    annotations:
+      summary: Detected high iterator age in function {{$labels.dimension_FunctionName}}
   - alert: LambdaHighInvocations
     expr: aws_lambda_invocations_sum > 5
     for: 1m
     labels:
-      severity: P0
+      severity: critical
     annotations:
       summary: "High Invocations on Lambda function: {{$labels.function_name}}"
       description: "High Invocations on Lambda function: {{$labels.function_name}}"
+
+  - alert: LambdaFailed
+    expr: (aws_lambda_errors_sum offset 8m) > 0
+    for: 1m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Lambda function failed: {{$labels.function_name}}"
+      description: "Lambda function failed: {{$labels.function_name}}"
