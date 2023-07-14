@@ -106,8 +106,6 @@ services:
      ports:
      - 9106:9106
      environment:
-     - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-}
-     - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-}
      - AWS_CREDENTIAL_PROFILES_FILE=/.aws/credentials
      - AWS_PROFILE=${AWS_PROFILE:-default}
        #     - AWS_REGION="us-west-2"

@@ -43,8 +43,11 @@ receivers:
 - name: critical
   slack_configs:
   - send_resolved: true
-    api_url: https://hooks.slack.com/services/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
-    channel: poc
+    api_url: https://slack.com/api/chat.postMessage
+    channel: "#poc"
+    http_config:
+      authorization:
+        credentials: xapp-test-token
     color: '{{ if eq .Status "firing" }}warning{{ else }}good{{ end }}'
     title: '[{{ if eq .Status "firing" }}{{ .Alerts.Firing | len }} {{ end }} {{ if
       eq .Status "firing" }}Alerts{{ else }}{{ .Status | toUpper }}{{ end }}]'
@@ -62,3 +65,4 @@ receivers:
 - name: high
 - name: warning
 templates: []
+
